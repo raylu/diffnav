@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -12,22 +13,45 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/muesli/termenv"
+	"github.com/urfave/cli/v3"
 
 	"github.com/dlvhdr/diffnav/pkg/ui"
 )
 
 func main() {
+	cmd := &cli.Command{
+		Usage: "A git diff pager with a file tree",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:        "unified",
+				Aliases:     []string{"u"},
+				Usage:       "side-by-side (default) or unified diff",
+				HideDefault: true,
+			},
+			&cli.BoolFlag{
+				Name:    "debug",
+				Usage:   "log to debug.log",
+				Sources: cli.EnvVars("DEBUG"),
+			},
+		},
+		Action: runDiffNav,
+	}
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func runDiffNav(ctx context.Context, cmd *cli.Command) error {
 	stat, err := os.Stdin.Stat()
 	if err != nil {
 		panic(err)
 	}
-
 	if stat.Mode()&os.ModeNamedPipe == 0 && stat.Size() == 0 {
 		fmt.Println("No diff, exiting")
 		os.Exit(0)
 	}
 
-	if os.Getenv("DEBUG") == "true" {
+	if cmd.Bool("debug") {
 		var fileErr error
 		logFile, fileErr := os.OpenFile("debug.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if fileErr != nil {
@@ -73,9 +97,8 @@ func main() {
 		fmt.Println("No input provided, exiting")
 		os.Exit(0)
 	}
-	p := tea.NewProgram(ui.New(input), tea.WithMouseAllMotion())
+	p := tea.NewProgram(ui.New(input, cmd.Bool("unified")), tea.WithMouseAllMotion())
 
-	if _, err := p.Run(); err != nil {
-		log.Fatal(err)
-	}
+	_, err = p.Run()
+	return err
 }

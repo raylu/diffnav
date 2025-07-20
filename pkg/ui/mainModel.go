@@ -44,10 +44,10 @@ type mainModel struct {
 	filtered          []string
 }
 
-func New(input string) mainModel {
+func New(input string, unified bool) mainModel {
 	m := mainModel{input: input, isShowingFileTree: true}
 	m.fileTree = filetree.New()
-	m.diffViewer = diffviewer.New()
+	m.diffViewer = diffviewer.New(unified)
 
 	m.help = help.New()
 	helpSt := lipgloss.NewStyle()

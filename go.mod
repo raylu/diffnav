@@ -10,6 +10,7 @@ require (
 	github.com/charmbracelet/log v0.4.0
 	github.com/charmbracelet/x/ansi v0.3.2
 	github.com/muesli/reflow v0.3.0
+	github.com/urfave/cli/v3 v3.3.8
 )
 
 require (
